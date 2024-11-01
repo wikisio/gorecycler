@@ -20,13 +20,15 @@ func TestRegisterPool(t *testing.T) {
 	recycle.RegisterPool[producer.Object, Int]()
 
 	i := recycle.Get[producer.Object, Int]()
+
 	i.Assign(func(t producer.Object) {
-		t.(*Int).i = 13
+		pi := recycle.FindPool[producer.Object](t)
+		fmt.Println(i, pi)
 	})
 
 	i.HandleAndRecycle(func(o producer.Object) error {
 		fmt.Println(o.Display())
-		if o.Display() != "13" {
+		if o.Display() != "0" {
 			t.Fail()
 		}
 		return nil

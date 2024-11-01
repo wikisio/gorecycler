@@ -1,15 +1,18 @@
 package recycle
 
-import "reflect"
+import (
+	"reflect"
+)
 
-type Recycle[BT any] interface {
-	HandleAndRecycle(h func(t BT) error) error
-	Assign(a func(t BT))
+type Recycler[BT any] interface {
+	HandleAndRecycle(cleanFunc func(bt BT) error) error
+	Assign(h func(bt BT))
 }
 
-func Get[BT any, T any]() Recycle[BT] {
+func Get[BT any, T any]() Recycler[BT] {
 	p, _ := pools.Load(reflect.TypeFor[T]())
 	return p.(*pool[BT]).get()
+
 }
 
 func RegisterPool[BT any, T any]() {
@@ -26,20 +29,29 @@ func RegisterPoolWithCleaner[BT any, T any](cleanFunc func(bt BT)) {
 	}
 
 	p := &pool[BT]{}
-	p.freeF = func(bt BT) {
-		empty := new(T)
+	p.empty = any(new(T)).(BT)
+	p.cleanFunc = func(bt BT) {
 		if cleanFunc != nil {
 			cleanFunc(bt)
 		}
-		t := any(bt).(*T)
-		*t = *empty
+		*(any(bt).(*T)) = *any(p.empty).(*T)
 	}
 	p.p.New = func() any {
-		t := new(baseRecycler[BT])
+		t := new(recycle[BT])
 		t.p = p
-		t.b = any(new(T)).(BT)
+		b := new(T)
+		t.b = any(b).(BT)
+		bts.Store(t.b, any(t).(Recycler[BT]))
 		return t
 	}
 
 	pools.Store(reflect.TypeFor[T](), p)
+}
+
+func FindPool[BT any](bt BT) Recycler[BT] {
+	b, ok := bts.Load(bt)
+	if ok {
+		return b.(Recycler[BT])
+	}
+	return nil
 }

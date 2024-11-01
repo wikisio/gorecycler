@@ -5,38 +5,38 @@ import (
 )
 
 var pools = sync.Map{}
+var bts = sync.Map{}
 
 type pool[BT any] struct {
-	p     sync.Pool
-	freeF func(bt BT)
+	p         sync.Pool
+	cleanFunc func(bt BT)
+
+	empty BT
+	t     sync.Map
 }
 
-func (p *pool[BT]) get() Recycle[BT] {
-	return p.p.Get().(Recycle[BT])
+func (p *pool[BT]) get() Recycler[BT] {
+	return p.p.Get().(Recycler[BT])
 }
 
-func (p *pool[BT]) put(r Recycle[BT]) {
+func (p *pool[BT]) put(r *recycle[BT]) {
 	p.p.Put(r)
 }
 
-func (p *pool[BT]) free(bt BT) {
-	p.free(bt)
-}
-
-type baseRecycler[BT any] struct {
+type recycle[BT any] struct {
 	b BT
 	p *pool[BT]
 }
 
-func (b *baseRecycler[BT]) HandleAndRecycle(h func(t BT) error) error {
+func (b *recycle[BT]) HandleAndRecycle(cleanFunc func(bt BT) error) error {
 	defer func() {
-		b.p.freeF(b.b)
+		b.p.cleanFunc(b.b)
 		b.p.put(b)
 	}()
 
-	return h(b.b)
+	return cleanFunc(b.b)
 }
 
-func (b *baseRecycler[BT]) Assign(h func(t BT)) {
+func (b *recycle[BT]) Assign(h func(t BT)) {
 	h(b.b)
 }
