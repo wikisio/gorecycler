@@ -42,7 +42,7 @@ func RegisterPoolWithCleaner[BT any, T any](cleanFunc func(bt BT)) {
 		t.p = p
 		b := new(T)
 		t.b = any(b).(BT)
-		bts.Store(t.b, any(t))
+		//bts.Store(t.b, any(t))
 		return t
 	}
 
@@ -50,6 +50,7 @@ func RegisterPoolWithCleaner[BT any, T any](cleanFunc func(bt BT)) {
 }
 
 func FindPool[BT any](bt BT) Recycler[BT] {
+	return nil
 	b, ok := bts.Load(bt)
 	if ok {
 		return b.(Recycler[BT])

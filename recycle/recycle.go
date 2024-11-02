@@ -31,7 +31,7 @@ type recycle[BT any] struct {
 func (b *recycle[BT]) HandleAndRecycle(processBTFunc func(bt BT) error) error {
 	defer func() {
 		b.p.cleanFunc(b.b)
-		b.p.put(b)
+		//b.p.put(b)
 	}()
 
 	return processBTFunc(b.b)
