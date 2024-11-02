@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/wikisio/gorecycler/customer_mock/producer"
 	"github.com/wikisio/gorecycler/recycle"
 	"log"
 	"os"
 	"runtime/trace"
-	"testing"
 )
 
 type node struct {
@@ -71,34 +69,6 @@ func sum(j *node) int {
 		r = sum(j.right.(*node))
 	}
 	return i + l + r
-}
-
-func TestRegisterPool(t *testing.T) {
-	recycle.RegisterPool[producer.Node, node]()
-
-	i := NewNode()
-
-	i.Assign(func(t producer.Node) {
-		pi := recycle.FindPool[producer.Node](t)
-		fmt.Println(i, pi)
-	})
-
-	i.HandleAndRecycle(func(o producer.Node) error {
-		fmt.Println(o.Sum())
-		if o.Sum() == 0 {
-			t.Fail()
-		}
-		return nil
-	})
-
-	i = recycle.Get[producer.Node, node]()
-	i.HandleAndRecycle(func(o producer.Node) error {
-		fmt.Println(o.Sum())
-		if o.Sum() == 0 {
-			t.Fail()
-		}
-		return nil
-	})
 }
 
 func cleanF(bt producer.Node) {
