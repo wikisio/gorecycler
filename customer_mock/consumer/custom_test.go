@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/wikisio/gorecycler/customer_mock/producer"
 	"github.com/wikisio/gorecycler/recycle"
+	"reflect"
+	"sync"
 	"testing"
 )
 
@@ -58,6 +60,20 @@ func BenchmarkPool(b *testing.B) {
 				bt.Sum()
 				return nil
 			})
+		}
+	})
+}
+
+func BenchmarkMap(b *testing.B) {
+	b.ReportAllocs()
+	bts := sync.Map{}
+	bts.Store(reflect.TypeFor[producer.Node](), "abc")
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, ok := bts.Load(reflect.TypeFor[producer.Node]())
+			if !ok {
+				b.Fail()
+			}
 		}
 	})
 }
