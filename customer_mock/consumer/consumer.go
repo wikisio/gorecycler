@@ -32,7 +32,6 @@ func newNode(n *node, layer int) {
 		n.right = bt
 		newNode(bt.(*node), layer-1)
 	})
-
 }
 
 func NewNode() recycle.Recycler[producer.Node] {
