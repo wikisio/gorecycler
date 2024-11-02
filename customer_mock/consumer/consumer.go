@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"runtime/trace"
-	"sync/atomic"
 	"testing"
 )
 
@@ -102,14 +101,11 @@ func TestRegisterPool(t *testing.T) {
 	})
 }
 
-var Clean = atomic.Int64{}
-
 func cleanF(bt producer.Node) {
 	if bt == nil {
 		return
 	}
 
-	Clean.Add(1)
 	l := bt.(*node).left
 	r := bt.(*node).right
 
@@ -154,5 +150,4 @@ func main() {
 			}
 		}
 	}
-	fmt.Println("From: ", recycle.From.Load(), " to: ", recycle.To.Load(), " Clean: ", Clean.Load())
 }

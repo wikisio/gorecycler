@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/wikisio/gorecycler/customer_mock/producer"
 	"github.com/wikisio/gorecycler/recycle"
 	"testing"
@@ -15,8 +14,6 @@ func TestPool(t *testing.T) {
 		bt.Sum()
 		return nil
 	})
-
-	fmt.Println("From: ", recycle.From.Load(), " to: ", recycle.To.Load(), " Clean: ", Clean.Load())
 }
 
 func BenchmarkPool(b *testing.B) {
@@ -38,5 +35,4 @@ func BenchmarkPool(b *testing.B) {
 			}
 		}
 	})
-	fmt.Println("From: ", recycle.From.Load(), " to: ", recycle.To.Load(), " Clean: ", Clean.Load())
 }
