@@ -15,39 +15,33 @@ type node struct {
 	right producer.Node
 }
 
-func NewNode() recycle.Recycler[producer.Node] {
-	root := recycle.Get[producer.Node, node]()
-	i := 3
-	var h producer.Node
-	root.Assign(func(bt producer.Node) {
-		h = bt
-	})
-
-	var newNode func(n *node, layer int)
-	newNode = func(n *node, layer int) {
-		if layer <= 0 {
-			return
-		}
-
-		var ll, rr producer.Node
-		l := recycle.Get[producer.Node, node]()
-		r := recycle.Get[producer.Node, node]()
-		l.Assign(func(bt producer.Node) {
-			bt.(*node).i = layer + 1
-			n.left = bt
-			ll = bt
-		})
-		r.Assign(func(bt producer.Node) {
-			bt.(*node).i = layer + 1
-			n.right = bt
-			rr = bt
-		})
-
-		newNode(ll.(*node), layer-1)
-		newNode(rr.(*node), layer-1)
+func newNode(n *node, layer int) {
+	if layer <= 0 {
+		return
 	}
 
-	newNode(h.(*node), i)
+	l := recycle.Get[producer.Node, node]()
+	r := recycle.Get[producer.Node, node]()
+	l.Assign(func(bt producer.Node) {
+		bt.(*node).i = layer + 1
+		n.left = bt
+		newNode(bt.(*node), layer-1)
+	})
+	r.Assign(func(bt producer.Node) {
+		bt.(*node).i = layer + 1
+		n.right = bt
+		newNode(bt.(*node), layer-1)
+	})
+
+}
+
+func NewNode() recycle.Recycler[producer.Node] {
+	root := recycle.Get[producer.Node, node]()
+	root.Assign(func(bt producer.Node) {
+		i := 3
+		newNode(bt.(*node), i)
+	})
+
 	return root
 }
 func (i *node) Sum() int {
