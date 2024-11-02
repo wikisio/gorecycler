@@ -1,5 +1,5 @@
 package producer
 
-type Object interface {
-	Display() string
+type Node interface {
+	Sum() int
 }

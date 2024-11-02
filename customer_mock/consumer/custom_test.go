@@ -1,4 +1,4 @@
-package consumer
+package main
 
 import (
 	"fmt"
@@ -7,40 +7,36 @@ import (
 	"testing"
 )
 
-type Int struct {
-	i int
-	b [32]byte
-}
+func TestPool(t *testing.T) {
+	recycle.RegisterPoolWithCleaner[producer.Node, node](cleanF)
 
-func (i *Int) Display() string {
-	return fmt.Sprintf("%d", i.i)
-}
-
-func TestRegisterPool(t *testing.T) {
-	recycle.RegisterPool[producer.Object, Int]()
-
-	i := recycle.Get[producer.Object, Int]()
-
-	i.Assign(func(t producer.Object) {
-		pi := recycle.FindPool[producer.Object](t)
-		fmt.Println(i, pi)
-	})
-
-	i.HandleAndRecycle(func(o producer.Object) error {
-		fmt.Println(o.Display())
-		if o.Display() != "0" {
-			t.Fail()
-		}
+	x := NewNode()
+	x.HandleAndRecycle(func(bt producer.Node) error {
+		bt.Sum()
 		return nil
 	})
 
-	i = recycle.Get[producer.Object, Int]()
-	i.HandleAndRecycle(func(o producer.Object) error {
-		fmt.Println(o.Display())
-		if o.Display() != "0" {
-			t.Fail()
-		}
-		return nil
-	})
+	fmt.Println("From: ", recycle.From.Load(), " to: ", recycle.To.Load(), " Clean: ", Clean.Load())
+}
 
+func BenchmarkPool(b *testing.B) {
+	recycle.RegisterPoolWithCleaner[producer.Node, node](cleanF)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			for m := 0; m < 100; m++ {
+				for n := 0; n < 2; n++ {
+					x := NewNode()
+					x.HandleAndRecycle(func(bt producer.Node) error {
+						bt.Sum()
+						return nil
+					})
+				}
+			}
+		}
+	})
+	fmt.Println("From: ", recycle.From.Load(), " to: ", recycle.To.Load(), " Clean: ", Clean.Load())
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type Recycler[BT any] interface {
-	HandleAndRecycle(cleanFunc func(bt BT) error) error
+	HandleAndRecycle(handleBtFunc func(bt BT) error) error
 	Assign(h func(bt BT))
 }
 
@@ -19,9 +19,9 @@ func RegisterPool[BT any, T any]() {
 	RegisterPoolWithCleaner[BT, T](nil)
 }
 
-// RegisterPoolWithCleaner registers a pool to allocates instance of T
-// T is the target struct to be used. *T should implement the BT interface.
-// if T needs to do close or clean operations, do it in cleanFunc, otherwise nil
+// RegisterPoolWithCleaner registers a pool To allocates instance of T
+// T is the target struct To be used. *T should implement the BT interface.
+// if T needs To do close or clean operations, do it in cleanFunc, otherwise nil
 func RegisterPoolWithCleaner[BT any, T any](cleanFunc func(bt BT)) {
 	_, ok := pools.Load(reflect.TypeFor[T]())
 	if ok {
@@ -35,13 +35,14 @@ func RegisterPoolWithCleaner[BT any, T any](cleanFunc func(bt BT)) {
 			cleanFunc(bt)
 		}
 		*(any(bt).(*T)) = *any(p.empty).(*T)
+
 	}
 	p.p.New = func() any {
 		t := new(recycle[BT])
 		t.p = p
 		b := new(T)
 		t.b = any(b).(BT)
-		bts.Store(t.b, any(t).(Recycler[BT]))
+		bts.Store(t.b, any(t))
 		return t
 	}
 
@@ -53,5 +54,6 @@ func FindPool[BT any](bt BT) Recycler[BT] {
 	if ok {
 		return b.(Recycler[BT])
 	}
+	panic("FindPool failed")
 	return nil
 }
