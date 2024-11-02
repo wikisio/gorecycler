@@ -52,15 +52,11 @@ func BenchmarkPool(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			for m := 0; m < 100; m++ {
-				for n := 0; n < 2; n++ {
-					x := NewNode()
-					x.HandleAndRecycle(func(bt producer.Node) error {
-						bt.Sum()
-						return nil
-					})
-				}
-			}
+			x := NewNode()
+			x.HandleAndRecycle(func(bt producer.Node) error {
+				bt.Sum()
+				return nil
+			})
 		}
 	})
 }
